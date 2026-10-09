@@ -23,7 +23,7 @@ public class CustomerController {
 
     @GetMapping
     public List<CustomerDTO> getAllCustomers() {
-        return customerMapper.customersToCustomerDTOs(customerRepository.findAll());
+        return customerMapper.customersToCustomerDTOs(customerRepository.findAllWithOrders());
     }
 
     @GetMapping(params = "subString")

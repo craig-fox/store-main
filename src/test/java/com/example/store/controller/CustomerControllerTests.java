@@ -68,7 +68,7 @@ class CustomerControllerTests {
 
     @Test
     void testGetAllCustomers() throws Exception {
-        when(customerRepository.findAll()).thenReturn(List.of(customer));
+        when(customerRepository.findAllWithOrders()).thenReturn(List.of(customer));
 
         mockMvc.perform(get("/customer"))
                 .andExpect(status().isOk())

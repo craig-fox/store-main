@@ -27,7 +27,7 @@ public class OrderController {
 
     @GetMapping
     public List<OrderDTO> getAllOrders() {
-        return orderMapper.ordersToOrderDTOs(orderRepository.findAll());
+        return orderMapper.ordersToOrderDTOs(orderRepository.findAllWithCustomer());
     }
 
     @GetMapping("/{orderId}")

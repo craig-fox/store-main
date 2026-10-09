@@ -1,6 +1,11 @@
+logging:
+  level:
+    org.hibernate.SQL: DEBUG
+    org.hibernate.orm.jdbc.bind: TRACE
+
 spring:
   datasource:
-    url: jdbc:postgresql://localhost:5433/store_test
+    url: jdbc:postgresql://localhost:5433/store
     username: admin
     password: admin
   jpa:
