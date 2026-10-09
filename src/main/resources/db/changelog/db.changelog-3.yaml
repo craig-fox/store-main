@@ -1,0 +1,7 @@
+databaseChangeLog:
+  - changeSet:
+      id: 3-data
+      author: craig.fox.jd@icloud.com
+      changes:
+        - sqlFile:
+            path: db/changelog/fix-sequences.sql

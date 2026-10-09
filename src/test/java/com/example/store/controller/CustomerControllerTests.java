@@ -14,6 +14,7 @@ import org.springframework.http.MediaType;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.MockMvc;
 
+import java.util.ArrayList;
 import java.util.List;
 
 import static org.mockito.Mockito.when;
@@ -35,11 +36,23 @@ class CustomerControllerTests {
 
     private Customer customer;
 
+    private List<Customer> customers;
+
     @BeforeEach
     void setUp() {
         customer = new Customer();
         customer.setName("John Doe");
         customer.setId(1L);
+
+        customers = new ArrayList<>();
+        List<String> names = List.of("Robert", "robin", "ROBIN", "Bob Robson");
+
+        for(int i = 0; i < names.size(); i++) {
+            Customer customer = new Customer();
+            customer.setName(names.get(i));
+            customer.setId(i+1L);
+            customers.add(customer);
+        }
     }
 
     @Test
@@ -60,6 +73,15 @@ class CustomerControllerTests {
         mockMvc.perform(get("/customer"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$..name").value("John Doe"));
-        ;
+    }
+
+    @Test
+    void testGetCustomersWithFilterReturnsMatches() throws Exception {
+        when(customerRepository.findByNameContainingIgnoreCase("rob"))
+            .thenReturn(customers);
+
+        mockMvc.perform(get("/customer").param("subString", "rob"))
+            .andExpect(status().isOk())
+            .andExpect(jsonPath("$.length()").value(4));
     }
 }

@@ -9,6 +9,7 @@ import lombok.RequiredArgsConstructor;
 
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.server.ResponseStatusException;
 
 import java.util.List;
 
@@ -23,6 +24,15 @@ public class CustomerController {
     @GetMapping
     public List<CustomerDTO> getAllCustomers() {
         return customerMapper.customersToCustomerDTOs(customerRepository.findAll());
+    }
+
+    @GetMapping(params = "subString")
+    public List<CustomerDTO> getCustomersBySubString(@RequestParam String subString) {
+        if (subString.isBlank()) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "subString must not be blank");
+        }
+        return customerMapper.customersToCustomerDTOs(
+                customerRepository.findByNameContainingIgnoreCase(subString.trim()));
     }
 
     @PostMapping
