@@ -2,13 +2,18 @@ package com.example.store.controller;
 
 import com.example.store.dto.OrderDTO;
 import com.example.store.entity.Order;
+import com.example.store.exception.OrderNotFoundException;
 import com.example.store.mapper.OrderMapper;
 import com.example.store.repository.OrderRepository;
-
 import lombok.RequiredArgsConstructor;
-
 import org.springframework.http.HttpStatus;
-import org.springframework.web.bind.annotation.*;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.ResponseStatus;
+import org.springframework.web.bind.annotation.RestController;
 
 import java.util.List;
 
@@ -23,6 +28,13 @@ public class OrderController {
     @GetMapping
     public List<OrderDTO> getAllOrders() {
         return orderMapper.ordersToOrderDTOs(orderRepository.findAll());
+    }
+
+    @GetMapping("/{orderId}")
+    public OrderDTO getOrder(@PathVariable Long orderId) {
+        Order order = orderRepository.findById(orderId)
+            .orElseThrow(() -> new OrderNotFoundException(orderId));
+        return orderMapper.orderToOrderDTO(order);
     }
 
     @PostMapping

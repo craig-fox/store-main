@@ -23,6 +23,8 @@ import java.util.List;
 import java.util.Optional;
 
 import static org.mockito.Mockito.when;
+import static org.junit.jupiter.api.Assertions.assertInstanceOf;
+import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.mockito.ArgumentMatchers.*;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
@@ -31,8 +33,6 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 @ComponentScan(basePackageClasses = CustomerMapper.class)
 @RequiredArgsConstructor
 class OrderControllerTests {
-
-    private static final Long ORDER_ID = 123456L;
 
     @Autowired
     private MockMvc mockMvc;
@@ -88,22 +88,32 @@ class OrderControllerTests {
     void testGetOrderById() throws Exception {
         when(orderRepository.findById(anyLong())).thenReturn(Optional.of(order)) ;
 
-        mockMvc.perform(get("/order/" + ORDER_ID))
+        mockMvc.perform(get("/order/" + 1L))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$..description").value("Test Order"))
                 .andExpect(jsonPath("$..customer.name").value("John Doe"))
-                .andExpect(jsonPath("$..order.id").value(1L));
+                .andExpect(jsonPath("$.id").value(1L));
     }
 
     @Test
-    void testGetOrderByNonexistentIdThrows404() {
+    void testGetOrderByNonexistentIdThrows404() throws Exception {
         var missingOrderId = 0L;
-
-        when(orderRepository.findById(eq(missingOrderId))).thenThrow(new OrderNotFoundException(missingOrderId));
-
+    
+        when(orderRepository.findById(eq(missingOrderId))).thenReturn(Optional.empty());
+    
         mockMvc.perform(get("/order/" + missingOrderId))
-        .andExpect(status().isOk())
-
-
+            .andExpect(status().isNotFound())
+            .andExpect(result -> {
+                OrderNotFoundException exception = assertInstanceOf(
+                    OrderNotFoundException.class,
+                    result.getResolvedException()
+                );
+            
+                assertEquals(
+                    "Order not found with id: " + missingOrderId,
+                    exception.getMessage()
+                );
+            });
     }
+
 }
