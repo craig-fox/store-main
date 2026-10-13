@@ -76,7 +76,7 @@ class OrderControllerTests {
 
     @Test
     void testGetOrder() throws Exception {
-        when(orderRepository.findAllWithCustomer()).thenReturn(List.of(order));
+        when(orderRepository.findAllWithCustomerAndProducts()).thenReturn(List.of(order));
 
         mockMvc.perform(get("/order"))
                 .andExpect(status().isOk())

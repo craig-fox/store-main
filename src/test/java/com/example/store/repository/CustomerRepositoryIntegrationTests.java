@@ -20,7 +20,7 @@ import static org.assertj.core.api.Assertions.assertThat;
     "spring.datasource.username=admin",
     "spring.datasource.password=admin"
 })
-public class CustomerRepositoryIntegrationTests {
+class CustomerRepositoryIntegrationTests {
     @Autowired
     private CustomerRepository customerRepository;
 
