@@ -70,3 +70,117 @@ Think carefully about the impact on performance when implementing your changes
 The specifications of the tasks have been left deliberately vague. You will be required to exercise judgement about what to deliver - in a real world environment, you would clarify these points in refinement, but since this is a project to be completed without interaction, feel free to make assumptions - but be prepared to defend them when asked.
 There's no CI pipeline associated with this project, but in reality there would be. Consider the things that you would expect that pipeline to verify before allowing your code to be promoted
 Feel free to refactor the codebase if necessary. Bad choices were deliberately made when creating this project.
+
+## CI/CD and Docker
+
+### Overview
+
+A CI pipeline has been implemented using GitHub Actions to build and test the application and publish a Docker image to GitHub Container Registry (GHCR).
+
+The pipeline:
+- Runs the Gradle test suite on pushes and pull requests.
+- Uses PostgreSQL as a service for database-dependent tests.
+- Builds and publishes a Docker image to GHCR after successful tests on branch pushes and version tags.
+- Publishes multi-platform images for `linux/amd64` and `linux/arm64`.
+
+### Published Docker image
+
+The application image is available from GHCR:
+
+```text
+ghcr.io/craig-fox/store-main:main
+```
+
+Pull the latest image from the `main` tag:
+
+```bash
+docker pull ghcr.io/craig-fox/store-main:main
+```
+
+The package should be publicly accessible so that reviewers can pull the image without authenticating to GHCR.
+
+### Prerequisites
+
+- Docker installed and running.
+- PostgreSQL 16 or a compatible PostgreSQL version.
+- A PostgreSQL database named `store`.
+- A database user with permission to create and modify the application schema.
+
+The application uses Liquibase to apply database schema migrations and seed the initial product data during startup.
+
+### Environment variables
+
+The application supports the following environment variables:
+
+| Variable | Default | Description |
+|---|---|---|
+| `DB_URL` | `jdbc:postgresql://localhost:5433/store` | JDBC URL for PostgreSQL |
+| `DB_USERNAME` | `admin` | Database username |
+| `DB_PASSWORD` | `admin` | Database password |
+
+When running the application in Docker, override these defaults to point to the PostgreSQL instance accessible from the container.
+
+For local development, the default values can be used when PostgreSQL is available on port `5433` with the expected credentials and database.
+
+### Running the application
+
+The following example assumes PostgreSQL is already running on the host at port `5433`, with a database named `store` and the credentials shown above.
+
+Pull the image:
+
+```bash
+docker pull ghcr.io/craig-fox/store-main:main
+```
+
+Start the application container:
+
+```bash
+docker run --rm \
+  --name store-main \
+  -p 8080:8080 \
+  -e DB_URL=jdbc:postgresql://host.docker.internal:5433/store \
+  -e DB_USERNAME=admin \
+  -e DB_PASSWORD=admin \
+  ghcr.io/craig-fox/store-main:main
+```
+
+The application starts on port `8080`. On startup, Liquibase applies any pending database changesets.
+
+Keep the terminal open to view application logs. Press `Ctrl+C` to stop the container.
+
+**Note:** `host.docker.internal` is suitable for connecting from Docker Desktop on macOS and Windows to a service running on the host. Linux users may need to configure host access differently.
+
+### Verifying the application
+
+Check that the orders endpoint responds:
+
+```bash
+curl -i http://localhost:8080/order
+```
+
+Retrieve a specific order:
+
+```bash
+curl -i http://localhost:8080/order/1
+```
+
+Create an order using an existing customer ID and product IDs:
+
+```bash
+curl -i -X POST http://localhost:8080/order \
+  -H "Content-Type: application/json" \
+  -d '{
+    "customerId": 1,
+    "productIds": [1, 2]
+  }'
+```
+
+A successful order creation returns `201 Created`.
+
+The supplied customer and product IDs must exist in the database.
+
+### CI pipeline
+
+The GitHub Actions workflow is defined in `.github/workflows/ci.yml`. Workflow runs can be inspected in the repository's **Actions** tab.
+
+The Docker image is built and published only after the test job succeeds, helping ensure that the published image corresponds to a successfully tested revision.
