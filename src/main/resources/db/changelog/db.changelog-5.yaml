@@ -1,0 +1,8 @@
+databaseChangeLog:
+  - changeSet:
+      id: 5-seed-products
+      author: craig.fox.jd@icloud.com
+      changes:
+        - sqlFile:
+            path: db/changelog/seed-products.sql
+            splitStatements: true
